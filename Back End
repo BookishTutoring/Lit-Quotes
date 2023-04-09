@@ -1,0 +1,40 @@
+const express = require("express");
+const https = require("https");
+
+const app = express();
+
+const GOODREADS_API_KEY = "your_goodreads_api_key_here";
+
+app.get("/api/quote", (req, res) => {
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Construct the URL to fetch the quote of the day
+  const url = `https://www.goodreads.com/quotes/list?utf8=%E2%9C%93&v=2&key=${GOODREADS_API_KEY}&id=46301360&page=1&per_page=1&date=${today}`;
+
+  // Fetch the quote of the day from the Goodreads API
+  https.get(url, (response) => {
+    let data = "";
+
+    response.on("data", (chunk) => {
+      data += chunk;
+    });
+
+    response.on("end", () => {
+      // Parse the response as JSON
+      const quoteData = JSON.parse(data);
+
+      // Extract the quote text and author from the response
+      const quoteText = quoteData.quotes[0].quoteText;
+      const quoteAuthor = quoteData.quotes[0].authorName;
+
+      // Send the quote of the day as JSON
+      res.json({ quote: `${quoteText} - ${quoteAuthor}` });
+    });
+  }).on("error", (err) => {
+    // Send an error response if something went wrong
+    res.status(500).json({ error: "Unable to fetch quote" });
+  });
+});
+
+module.exports = app;
