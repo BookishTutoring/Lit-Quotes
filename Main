@@ -1,0 +1,72 @@
+import React from "react";
+import "./App.css";
+import logo from "./logo.png";
+
+function App() {
+  // Sample quote from J.K. Rowling and J.R.R. Tolkien
+  const quote =
+    "It does not do to dwell on dreams and forget to live. - Albus Dumbledore";
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <h1 className="App-title">Quote of the Day</h1>
+      </header>
+      <div className="App-quote">
+        <p>{quote}</p>
+      </div>
+      <div className="App-explanation">
+        <p>
+          This app gives you a new quote every day from the works of J.K. Rowling and J.R.R. Tolkien.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+const https = require('https');
+
+const GOODREADS_API_KEY = 'your_goodreads_api_key_here';
+
+function getQuoteOfTheDay(callback) {
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Construct the URL to fetch the quote of the day
+  const url = `https://www.goodreads.com/quotes/list?utf8=%E2%9C%93&v=2&key=${GOODREADS_API_KEY}&id=46301360&page=1&per_page=1&date=${today}`;
+
+  // Fetch the quote of the day from the Goodreads API
+  https.get(url, (res) => {
+    let data = '';
+
+    res.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    res.on('end', () => {
+      // Parse the response as JSON
+      const quoteData = JSON.parse(data);
+
+      // Extract the quote text and author from the response
+      const quoteText = quoteData.quotes[0].quoteText;
+      const quoteAuthor = quoteData.quotes[0].authorName;
+
+      // Invoke the callback with the quote text and author
+      callback(null, quoteText, quoteAuthor);
+    });
+  }).on('error', (err) => {
+    // Invoke the callback with an error if something went wrong
+    callback(err, null, null);
+  });
+}
+
+// Example usage: get the quote of the day and log it to the console
+getQuoteOfTheDay((err, quoteText, quoteAuthor) => {
+  if (err) {
+    console.error('Error getting quote of the day:', err);
+  } else {
+    console.log(`"${quoteText}"\n- ${quoteAuthor}`);
+  }
+});
